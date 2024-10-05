@@ -31,11 +31,10 @@
 - [Filter Utility](#filter-utility)
 - [Sort Utility](#sort-utility)
 - [Search Utility](#search-utility)
-
+  
 13. [Exercises and Solutions](#exercises-and-solutions)
 14. [Conclusion](#conclusion)
 
----
 
 ## Project Overview
 
@@ -786,3 +785,336 @@ export function applySearch(query, searchTerm, columns) {
 ```
 
 ---
+
+## Utilities
+
+### Cache Utility
+
+**cache.js:**
+
+```js
+import NodeCache from "node-cache";
+
+const cache = new NodeCache({ stdTTL: 3600 }); // Cache TTL of 1 hour
+
+export default cache;
+
+// Example usage in a controller:
+export const getCachedData = (key) => {
+  return cache.get(key); // Fetch data from cache by key
+};
+
+export const setCachedData = (key, value) => {
+  cache.set(key, value); // Store data in cache with key
+};
+
+export const clearCache = (key) => {
+  cache.del(key); // Clear specific key from cache
+};
+```
+
+**Example Usage in Controller:**
+
+```js
+import cache from "../utils/cache.js";
+
+export const getPosts = async (req, res) => {
+  const cacheKey = `posts:${JSON.stringify(req.query)}`;
+  const cachedData = cache.get(cacheKey);
+
+  if (cachedData) {
+    return res.json(cachedData); // Return cached data if available
+  }
+
+  // Fetch data from DB
+  const posts = await db.select().from(posts).limit(10);
+  
+  // Set cache
+  cache.set(cacheKey, posts);
+
+  res.json(posts); // Return fresh data
+};
+```
+
+---
+
+### Pagination Utility
+
+**paginate.js:**
+
+```js
+export function paginate(query, { page = 1, limit = 10 }) {
+  const offset = (page - 1) * limit; // Calculate offset based on page and limit
+  return query.limit(limit).offset(offset); // Apply pagination to the query
+}
+```
+
+**Example Usage in Controller:**
+
+```js
+import { paginate } from "../utils/paginate.js";
+
+export const getPaginatedPosts = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  let query = db.select().from(posts);
+
+  query = paginate(query, { page, limit }); // Apply pagination
+
+  const result = await query;
+  res.json(result); // Return paginated results
+};
+```
+
+---
+
+### Filter Utility
+
+**filter.js:**
+
+```js
+import { and, eq, like } from "drizzle-orm";
+
+export function applyFilters(query, filters, columns) {
+  const conditions = [];
+
+  for (const key in filters) {
+    if (columns.includes(key)) {
+      // Apply filters based on equality or partial match (like)
+      if (typeof filters[key] === "string" && filters[key].includes("%")) {
+        conditions.push(like(key, filters[key])); // Partial match
+      } else {
+        conditions.push(eq(key, filters[key])); // Exact match
+      }
+    }
+  }
+
+  if (conditions.length > 0) {
+    return query.where(and(...conditions)); // Combine conditions
+  }
+
+  return query; // Return query unmodified if no filters applied
+}
+```
+
+**Example Usage in Controller:**
+
+```js
+import { applyFilters } from "../utils/filter.js";
+
+export const getFilteredPosts = async (req, res) => {
+  const filters = req.query;
+  
+  let query = db.select().from(posts);
+  query = applyFilters(query, filters, ["title", "userId"]); // Apply filters for title and userId
+
+  const result = await query;
+  res.json(result); // Return filtered results
+};
+```
+
+---
+
+### Sort Utility
+
+**sort.js:**
+
+```js
+export function applySorting(query, sortBy = "createdAt", sortOrder = "desc", columns) {
+  if (columns.includes(sortBy)) {
+    return query.orderBy(
+      sortOrder === "desc" ? columns[sortBy].desc() : columns[sortBy].asc()
+    ); // Sort by column and order
+  }
+  return query; // Return query unmodified if no valid sorting applied
+}
+```
+
+**Example Usage in Controller:**
+
+```js
+import { applySorting } from "../utils/sort.js";
+
+export const getSortedPosts = async (req, res) => {
+  const sortBy = req.query.sortBy || "createdAt";
+  const sortOrder = req.query.sortOrder || "desc";
+
+  let query = db.select().from(posts);
+  query = applySorting(query, sortBy, sortOrder, ["createdAt", "title"]); // Sort by createdAt or title
+
+  const result = await query;
+  res.json(result); // Return sorted results
+};
+```
+
+---
+
+### Search Utility
+
+**search.js:**
+
+```js
+import { like, or } from "drizzle-orm";
+
+export function applySearch(query, searchTerm, columns) {
+  if (searchTerm) {
+    const conditions = columns.map((column) => like(column, `%${searchTerm}%`)); // Search term across multiple columns
+    return query.where(or(...conditions)); // Combine search conditions with OR
+  }
+  return query; // Return query unmodified if no search term
+}
+```
+
+**Example Usage in Controller:**
+
+```js
+import { applySearch } from "../utils/search.js";
+
+export const getSearchedPosts = async (req, res) => {
+  const searchTerm = req.query.searchTerm;
+
+  let query = db.select().from(posts);
+  query = applySearch(query, searchTerm, ["title", "content"]); // Search across title and content
+
+  const result = await query;
+  res.json(result); // Return search results
+};
+```
+
+
+
+## Exercises and Solutions
+
+### Exercise 1: User Registration and Login
+
+**Objective:** 
+Implement a user registration and login system using the `authController.js`. Ensure that all input data is properly validated.
+
+1. Set up the `/register` and `/login` routes.
+2. Create a new user with hashed passwords.
+3. Implement JWT-based authentication for login.
+
+**Solution:**
+
+1. For registration, make sure the password is hashed using bcrypt before saving the user details.
+2. On login, validate the credentials and generate a JWT token.
+
+```js
+// Register
+router.post("/register", register);
+
+// Login
+router.post("/login", login);
+```
+
+### Exercise 2: Creating a New Post
+
+**Objective:** 
+Create a post with a user reference and image upload.
+
+1. Implement a post creation function.
+2. Ensure the user is authenticated and authorized before creating a post.
+3. Allow file uploads using multer.
+
+**Solution:**
+
+1. Add the `upload` middleware in the route to handle file uploads.
+2. Ensure that the user's role is checked before allowing post creation.
+
+```js
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "editor"),
+  upload.single("image"),
+  createPost
+);
+```
+
+### Exercise 3: Real-Time Comment Notifications
+
+**Objective:**
+Notify all users of new comments in real-time using Socket.IO.
+
+1. Set up Socket.IO in your backend.
+2. Emit a `newComment` event whenever a new comment is created.
+3. Listen for the event on the frontend and display the new comment.
+
+**Solution:**
+
+1. Set up the Socket.IO server and emit the `newComment` event in `createComment`.
+
+```js
+io.emit("newComment", comment);
+```
+
+2. On the frontend, listen for the `newComment` event and display it in the comment section.
+
+```js
+socket.on("newComment", (comment) => {
+  console.log("New comment received:", comment);
+});
+```
+
+### Exercise 4: Caching Post Data
+
+**Objective:** 
+Use `node-cache` to cache the list of posts and invalidate the cache when new posts are created.
+
+1. Cache the result of the `getPosts` function.
+2. Invalidate the cache when a new post is created.
+
+**Solution:**
+
+1. Use the `cache.get` and `cache.set` methods to store and retrieve cached data.
+
+```js
+const cachedData = cache.get(cacheKey);
+if (cachedData) {
+  return res.json(cachedData);
+} else {
+  // Fetch data from the database and cache it
+  const result = await query;
+  cache.set(cacheKey, result);
+  res.json(result);
+}
+```
+
+2. When a new post is created, invalidate the cache for all posts.
+
+```js
+cache.keys((err, keys) => {
+  if (!err) {
+    keys.forEach((key) => {
+      if (key.startsWith("posts:")) {
+        cache.del(key);
+      }
+    });
+  }
+});
+```
+
+### Exercise 5: Role-Based Access Control (RBAC)
+
+**Objective:**
+Restrict access to certain routes based on the user's role (admin, editor, user).
+
+1. Implement the role-based access control middleware.
+2. Ensure only users with the `admin` or `editor` role can create posts.
+
+**Solution:**
+
+1. Use the `authorizeRoles` middleware in your route to restrict access.
+
+```js
+router.post(
+  "/",
+  authenticateToken,
+  authorizeRoles("admin", "editor"),
+  createPost
+);
+```
+
+2. Test that users without the required role receive an "Access denied" message.
+
