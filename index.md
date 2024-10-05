@@ -1,4 +1,4 @@
-# Full Project with Drizzle ORM, `node-cache`, Role-Based Access Control, and File Uploads
+# Full Project with Drizzle ORM, node-cache , Role-Based Access Control, and File Uploads
 
 ## Table of Contents
 
