@@ -25,16 +25,12 @@
 10. [File Uploads](#file-uploads)
 11. [Real-Time Features with Socket.IO](#real-time-features-with-socketio)
 12. [Utilities](#utilities)
-
 - [Cache Utility](#cache-utility)
 - [Pagination Utility](#pagination-utility)
 - [Filter Utility](#filter-utility)
 - [Sort Utility](#sort-utility)
 - [Search Utility](#search-utility)
-  
 13. [Exercises and Solutions](#exercises-and-solutions)
-14. [Conclusion](#conclusion)
-
 
 ## Project Overview
 
@@ -981,10 +977,8 @@ export const getSearchedPosts = async (req, res) => {
   res.json(result); // Return search results
 };
 ```
-
-
-
-## Exercises and Solutions
+---
+### Exercises and Solutions
 
 ### Exercise 1: User Registration and Login
 
@@ -1117,4 +1111,4 @@ router.post(
 ```
 
 2. Test that users without the required role receive an "Access denied" message.
-
+---
