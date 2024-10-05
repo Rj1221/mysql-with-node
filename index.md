@@ -32,6 +32,7 @@
 - [Search Utility](#search-utility)
 13. [Exercises and Solutions](#exercises-and-solutions)
 
+
 ## Project Overview
 
 In this project, we’ll build a **Blog Platform** with the following features:
@@ -978,7 +979,8 @@ export const getSearchedPosts = async (req, res) => {
 };
 ```
 ---
-### Exercises and Solutions
+## Exercises and Solutions
+
 
 ### Exercise 1: User Registration and Login
 
