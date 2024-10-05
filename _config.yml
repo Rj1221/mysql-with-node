@@ -1,3 +1,12 @@
 theme: jekyll-theme-cayman
 title: Node JS Drizzle ORM Guide For MySql
 description: A beginner guide to Drizzle ORM
+url: "https://rj1221.github.io"
+baseurl: "/mysql-with-node"
+author: "Raj"
+social:
+  github: https://github.com/Rj1221
+  linkedin: https://www.linkedin.com/in/raj-8700b5214
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
