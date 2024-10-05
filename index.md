@@ -1113,4 +1113,5 @@ router.post(
 ```
 
 2. Test that users without the required role receive an "Access denied" message.
+
 ---
